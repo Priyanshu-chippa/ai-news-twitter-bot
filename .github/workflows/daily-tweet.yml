@@ -2,11 +2,8 @@ name: Daily AI News Bot Runner
 
 on:
   schedule:
-    # Runs at 02:30 UTC every day. 
-    # This is 8:00 AM IST. Adjust cron schedule as needed.
-    # Use a cron calculator like crontab.guru to find your desired UTC time.
-    # Example: '0 10 * * *' for 10:00 AM UTC daily
-    - cron: '30 2 * * *'  
+    # Test schedule: 10:05 AM IST (04:35 UTC)
+    - cron: '50 4 * * *' 
   workflow_dispatch: # Allows you to manually trigger the workflow from the GitHub Actions tab
 
 jobs:
@@ -20,7 +17,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4 
       with:
-        node-version: '20' # Your Node.js version is v22, so '22' would also work. '20' is a stable LTS.
+        node-version: '20' 
 
     - name: Install dependencies
       run: npm ci 
@@ -31,6 +28,6 @@ jobs:
         TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
         TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
         TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
-        TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }} # Make sure this secret exists in GitHub if you use it
+        TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: node index.js

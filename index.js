@@ -1,7 +1,6 @@
-// index.js (Temporary test version)
+// index.js (Temporary test version for schedule trigger)
 console.log("--- GitHub Actions Scheduled Trigger Test ---");
 const currentDate = new Date().toISOString();
-console.log(`Workflow triggered at (according to script): ${currentDate}`);
-console.log("If you see this, the GitHub Actions schedule trigger worked!");
-console.log("Remember to revert index.js to the full bot logic after this test.");
-// No API calls, no complex logic, just a print statement.
+console.log(`Workflow triggered at (script time): ${currentDate}`);
+console.log("SUCCESS: GitHub Actions schedule trigger worked as expected for the test!");
+console.log("IMPORTANT: Revert index.js to the full bot logic & daily-tweet.yml to the daily schedule after this test.");
