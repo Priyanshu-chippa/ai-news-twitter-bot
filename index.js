@@ -3,7 +3,7 @@ require('dotenv').config(); // Load .env variables FIRST
 
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@google/generative-ai");
 const axios = require('axios');
-const { TwitterApi } = require('twitter-api-v2'); 
+const { TwitterApi } = require('twitter-api-v2');
 
 // --- Function to Fetch HTML ---
 async function fetchTechmemeHtml() {
@@ -15,7 +15,7 @@ async function fetchTechmemeHtml() {
         });
         if (response.status === 200) {
             console.log("HTML fetched successfully!");
-            return response.data; 
+            return response.data;
         } else {
             console.error(`Failed to fetch HTML: Status code ${response.status}`);
             return null;
@@ -34,8 +34,8 @@ async function analyzeHtmlAndGetJsonFromGemini(htmlContent) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const modelName = "gemini-2.5-flash-preview-05-20"; 
-    
+    const modelName = "gemini-2.5-flash";
+
     console.log(`\nAttempting to get structured JSON news from Gemini (${modelName})...`);
     try {
         if (typeof htmlContent !== 'string') {
@@ -43,7 +43,7 @@ async function analyzeHtmlAndGetJsonFromGemini(htmlContent) {
             return null;
         }
 
-        const model = genAI.getGenerativeModel({ 
+        const model = genAI.getGenerativeModel({
             model: modelName,
             safetySettings: [
                 { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -51,11 +51,11 @@ async function analyzeHtmlAndGetJsonFromGemini(htmlContent) {
                 { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
                 { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
             ],
-            generationConfig: { 
+            generationConfig: {
                 responseMimeType: "application/json",
             }
         });
-        
+
         const prompt = `
 Analyze the following HTML document, which is the Techmeme homepage.
 Identify the top 2 or 3 most significant news items related to Artificial Intelligence (AI), Machine Learning (ML), Large Language Models (LLMs), or major AI company news.
@@ -67,35 +67,35 @@ HTML DOCUMENT:
 ---BEGIN HTML---
 ${htmlContent}
 ---END HTML---`;
-        
+
         const generationResult = await model.generateContent(prompt);
         const response = generationResult.response;
-        
+
         if (!response || typeof response.text !== 'function') {
             console.error("Gemini did not return a valid response structure for JSON.");
-            if (generationResult?.response?.promptFeedback) { 
-                 console.error("Prompt Feedback:", generationResult.response.promptFeedback);
+            if (generationResult?.response?.promptFeedback) {
+                console.error("Prompt Feedback:", generationResult.response.promptFeedback);
             }
             return null;
         }
-        
+
         const jsonString = response.text();
         try {
             const parsedJson = JSON.parse(jsonString);
-            return parsedJson; 
+            return parsedJson;
         } catch (parseError) {
             console.error("\nError parsing JSON string from Gemini:", parseError.message);
             console.error("Raw string from Gemini was:", jsonString);
             return null;
         }
-    } catch (error) { 
+    } catch (error) {
         console.error("Error during Gemini structured JSON operation:", error.message);
-        if (error.response?.promptFeedback) { 
-             console.error("Prompt Feedback:", error.response.promptFeedback);
+        if (error.response?.promptFeedback) {
+            console.error("Prompt Feedback:", error.response.promptFeedback);
         } else if (error.status && error.statusText) {
             console.error(`API Error: ${error.status} ${error.statusText}`);
         } else {
-             console.error("Full error object:", error); 
+            console.error("Full error object:", error);
         }
         return null;
     }
@@ -132,23 +132,23 @@ async function postNewsThreadToTwitter(newsItems) {
         previousTweetId = introTweet.id;
         console.log(`Intro tweet posted. ID: ${previousTweetId}`);
 
-        await new Promise(resolve => setTimeout(resolve, 2000)); 
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         for (let i = 0; i < newsItems.length; i++) {
             const item = newsItems[i];
-            const hashtagString = Array.isArray(item.hashtags) ? item.hashtags.join(" ") : ""; 
-            
+            const hashtagString = Array.isArray(item.hashtags) ? item.hashtags.join(" ") : "";
+
             let tweetText = `${item.headline}\n\n${item.summary}\n\n${item.link}\n\n${hashtagString}`;
-            
+
             if (tweetText.length > 280) {
-                const availableLengthForSummary = 280 - (item.headline.length + item.link.length + hashtagString.length + 6); 
-                if (item.summary.length > availableLengthForSummary -3 ) { 
+                const availableLengthForSummary = 280 - (item.headline.length + item.link.length + hashtagString.length + 6);
+                if (item.summary.length > availableLengthForSummary - 3) {
                     item.summary = item.summary.substring(0, availableLengthForSummary - 3) + "...";
                 }
                 tweetText = `${item.headline}\n\n${item.summary}\n\n${item.link}\n\n${hashtagString}`;
-                 if (tweetText.length > 280) { 
-                    tweetText = tweetText.substring(0, 277) + "..."; 
-                 }
+                if (tweetText.length > 280) {
+                    tweetText = tweetText.substring(0, 277) + "...";
+                }
             }
 
             console.log(`Posting news item ${i + 1}: "${item.headline}"`);
@@ -157,13 +157,13 @@ async function postNewsThreadToTwitter(newsItems) {
             });
             previousTweetId = newsTweet.id;
             console.log(`News item ${i + 1} posted. ID: ${previousTweetId}`);
-            
-            if (i < newsItems.length - 1) { 
+
+            if (i < newsItems.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
-        } 
+        }
 
-        await new Promise(resolve => setTimeout(resolve, 2000)); 
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         const outroText = `That's today's AI brief for ${currentDate}! Follow for more insights. 💡 #AICommunity`;
         console.log(`Posting outro: "${outroText}"`);
@@ -171,42 +171,42 @@ async function postNewsThreadToTwitter(newsItems) {
             reply: { in_reply_to_tweet_id: previousTweetId }
         });
         console.log(`Outro tweet posted. ID: ${outroTweet.id}`);
-        
+
         console.log("\nNews thread posted successfully to Twitter!");
 
-    } catch (error) { 
+    } catch (error) {
         console.error("\nError posting news thread to Twitter:");
         if (error.code === 401) { console.error("Unauthorized (401): Check Twitter API keys/permissions."); }
-        else if (error.code === 403) { 
+        else if (error.code === 403) {
             console.error("Forbidden (403): Possible rate limit, content issue, or app permission problem.");
             if (error.data && error.data.detail && error.data.detail.toLowerCase().includes("duplicate content")) {
                 console.error("Detail: Twitter flagged this as duplicate content.");
             }
         }
         if (error.data && error.data.errors) { console.error("API Error Details:", JSON.stringify(error.data.errors, null, 2)); }
-        else if (error.data && !error.data.errors) { console.error("API Error Data:", JSON.stringify(error.data, null, 2)); } 
-        else if (!error.data) { console.error("Full error object:", error); } 
-    } 
-} 
+        else if (error.data && !error.data.errors) { console.error("API Error Data:", JSON.stringify(error.data, null, 2)); }
+        else if (!error.data) { console.error("Full error object:", error); }
+    }
+}
 
 // --- Main Bot Logic Orchestrator ---
-async function mainBotLogic() { 
+async function mainBotLogic() {
     console.log(`--- ${new Date().toISOString()}: Starting AI News Bot Cycle ---`);
     const htmlContent = await fetchTechmemeHtml();
 
     if (htmlContent) {
-        const structuredNewsData = await analyzeHtmlAndGetJsonFromGemini(htmlContent); 
+        const structuredNewsData = await analyzeHtmlAndGetJsonFromGemini(htmlContent);
         if (structuredNewsData && Array.isArray(structuredNewsData) && structuredNewsData.length > 0) {
             console.log(`\nSuccessfully received and parsed ${structuredNewsData.length} news items from Gemini.`);
-            await postNewsThreadToTwitter(structuredNewsData); 
+            await postNewsThreadToTwitter(structuredNewsData);
         } else {
             console.log("\nFailed to get structured news data from Gemini, data is not an array, or no news items found.");
         }
     } else {
         console.log("\nFailed to fetch HTML content. Cannot proceed with this cycle.");
-    } 
+    }
     console.log(`--- ${new Date().toISOString()}: AI News Bot Cycle Ended ---`);
-} 
+}
 
 // --- Execution ---
 mainBotLogic();
